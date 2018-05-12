@@ -26,7 +26,7 @@ def identity(x):
 
 
 def identity_der(x):
-    return np.ones(5)
+    return np.ones(np.shape(x))
 
 
 def alias(al):

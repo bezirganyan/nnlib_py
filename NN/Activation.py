@@ -2,8 +2,8 @@ import numpy as np
 
 
 def sigmoid(x):
-    if x >= np.log(np.finfo(type(x)).max):
-        x = np.log(np.finfo(type(x)).max)
+    # if x >= np.log(np.finfo(type(x.any())).max):
+    #     x = np.log(np.finfo(type(x)).max)
     return 1 / (np.exp(-x) + 1)
 
 
@@ -14,11 +14,11 @@ def sigmoid_der(x):
 
 
 def relu(x):
-    return max(0, x)
+    return np.maximum(x, 0, x)
 
 
 def relu_der(x):
-    return 0 if x <= 0 else 1
+    return np.array([0 if n <= 0 else 1 for n in x])
 
 
 def identity(x):
@@ -26,7 +26,7 @@ def identity(x):
 
 
 def identity_der(x):
-    return 1
+    return np.ones(5)
 
 
 def alias(al):

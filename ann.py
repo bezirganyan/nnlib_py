@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from NN.Classifier import Classifier
 from NN.Losses import lse
 from NN.layer import Layer
+from NN import Optimizers
 
 dataset = pd.read_csv('Churn_Modelling.csv')
 
@@ -28,7 +29,7 @@ sc.fit(X_train)
 X_train = sc.transform(X_train)
 X_test = sc.transform(X_test)
 
-classifier = Classifier(loss=lse, batch_size=32, epochs=25)
+classifier = Classifier(loss=lse, epochs=50, batch_size=32, optimizer=Optimizers.sdg())
 classifier.add_layer(Layer(neurons_num=6, activation='relu', input_dim=11))
 classifier.add_layer(Layer(neurons_num=6, activation='relu'))
 classifier.add_layer(Layer(neurons_num=1, activation='sigmoid'))

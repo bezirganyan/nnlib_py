@@ -1,3 +1,5 @@
+import numpy as np
+
 def lse(x, y):
     err = (y - x)**2
-    return err
+    return np.mean(err)

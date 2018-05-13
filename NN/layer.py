@@ -1,5 +1,6 @@
 from .Neuron import Neuron
 
+
 class Layer:
     def __init__(self, neurons_num, activation, input_dim=None):
         self.neurons_num = neurons_num

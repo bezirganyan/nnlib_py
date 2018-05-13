@@ -59,3 +59,27 @@ class AdaGrad(Optimizer):
         for d in self.dendrites:
             d.weight = d.weight - update
             d.neuron.error += np.mean((d.weight * self.gradient))
+
+
+class RMSProp(Optimizer):
+    def __init__(self, rho=0.9, lr=0.001, epsilon=1e-7):
+        super().__init__()
+        self.rho = rho
+        self.lr = lr
+        self.epsilon = epsilon
+        self.hist_grad = 0
+
+    def optimize(self, dendrites, neuron):
+        self.dendrites = dendrites
+        self.neuron = neuron
+
+        self.gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
+
+        self.hist_grad = self.hist_grad*self.rho + (1. - self.rho)* self.gradient ** 2
+        rate_change = self.gradient / (self.epsilon + np.sqrt(self.hist_grad))
+        update = self.lr * rate_change
+
+        for d in self.dendrites:
+            d.weight = d.weight - update
+            d.neuron.error += np.mean((d.weight * self.gradient))
+    # TODO - Check if possible

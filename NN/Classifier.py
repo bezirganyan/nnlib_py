@@ -1,15 +1,21 @@
+import json
+import time
+
 from .layer import Layer
 from sklearn.metrics import accuracy_score, mean_squared_error
 import numpy as np
+import os
+import matplotlib.pyplot as plt
 
 
 class Classifier:
-    def __init__(self, loss, epochs, optimizer, batch_size):
+    def __init__(self, loss, epochs, batch_size, log_file=None, history=False):
         self.input_layer = None
         self.layers = []
         self.loss = loss
-        self.optimizer = optimizer
         self.epochs = epochs
+        self.log_file = log_file
+        self.history = False
         self.X_train = None
         self.X_test = None
         self.y_train = None
@@ -21,9 +27,45 @@ class Classifier:
         self.val_predictions = np.array([])
         self.val_outputs = np.array([])
 
+        if self.log_file is not None:
+            self.init_log()
+
+        if history:
+            self.history = {
+                'accuracy': [],
+                'loss': [],
+                'val_loss': [],
+                'val_accuracy': []
+            }
+
+    def init_log(self):
+        try:
+            os.remove(self.log_file)
+        except OSError:
+            pass
+
+        with open(self.log_file, 'w+') as f:
+            json.dump({'date': time.time()}, f)
+            f.write(os.linesep)
+            f.write(os.linesep)
+
+    def add_log(self, acc, loss, val_acc, val_loss, log=False):
+        if self.log_file is not None:
+            with open(self.log_file, 'a') as f:
+                json.dump({'accuracy': acc,
+                           'loss': loss,
+                           'val_accuracy': val_acc,
+                           'val_loss': val_loss}, f)
+                f.write(os.linesep)
+        if log:
+            self.history['accuracy'].append(acc)
+            self.history['loss'].append(loss)
+            self.history['val_accuracy'].append(val_acc)
+            self.history['val_loss'].append(val_loss)
+
     def add_layer(self, layer):
         if layer.input_dim is not None:
-            self.input_layer = Layer(neurons_num=layer.input_dim, activation='')
+            self.input_layer = Layer(neurons_num=layer.input_dim, activation='', optimizer=layer.optimizer)
             self.layers.append(self.input_layer)
         else:
             layer.add_connection(self.layers[-1])
@@ -39,6 +81,7 @@ class Classifier:
             self.do_epoch()
             self.test()
             acc, loss, val_acc, val_loss = self.get_accuracies()
+            self.add_log(acc, loss, val_acc, val_loss, log=True)
             print('epoch %d/%d -' % (i + 1, self.epochs), 'loss: %.4f -' % loss,
                   'accuracy: %.4f -' % acc, 'val_loss: %.4f -' % val_loss,
                   'val_accuracy: %.4f' % val_acc)
@@ -92,7 +135,7 @@ class Classifier:
     def back_propagate(self):
         for l in self.layers[::-1]:
             for n in l.neurons:
-                n.back_propagate(optimizer=self.optimizer)
+                n.back_propagate()
 
     def predict(self, x):
         self.feed_forward(x)
@@ -108,3 +151,23 @@ class Classifier:
         self.outputs = np.array([])
         self.val_outputs = np.array([])
         return acc, loss, val_acc, val_loss
+
+    def plot(self):
+        if not self.history:
+            raise ValueError('The history must be true to plot graphs')
+        # summarize history for accuracy
+        plt.plot(self.history['accuracy'])
+        plt.plot(self.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        # summarize history for loss
+        plt.plot(self.history['loss'])
+        plt.plot(self.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()

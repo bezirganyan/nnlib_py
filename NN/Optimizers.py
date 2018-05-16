@@ -5,7 +5,6 @@ class Optimizer(object):
     def __init__(self):
         self.dendrites = []
         self.neuron = None
-        self.gradient = 0.0
 
     def optimize(self, dendrites, neuron):
         raise NotImplementedError
@@ -22,20 +21,20 @@ class SGD(Optimizer):
         self.dendrites = dendrites
         self.neuron = neuron
 
-        self.gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
+        gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
 
         for d in self.dendrites:
             d.dWeight = self.momentum * d.dWeight -\
-                        self.lr * (d.neuron.output * self.gradient)
+                        self.lr * (d.neuron.output * gradient)
 
             if self.nesterov:
                 # d.weight = d.weight - d.dWeight
                 d.weight = d.weight + self.momentum * d.dWeight -\
-                           self.lr * (d.neuron.output * self.gradient)
+                           self.lr * (d.neuron.output * gradient)
             else:
                 d.weight = d.weight + d.dWeight
 
-            d.neuron.error += np.mean((d.weight * self.gradient))
+            d.neuron.error += np.mean((d.weight * gradient))
 
     # TODO - Check if possible
 
@@ -51,16 +50,16 @@ class AdaGrad(Optimizer):
         self.dendrites = dendrites
         self.neuron = neuron
 
-        self.gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
+        gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
         if self.hist_grad is None:
-            self.hist_grad = self.gradient ** 2
+            self.hist_grad = gradient ** 2
         else:
-            self.hist_grad += self.gradient ** 2
-        rate_change = self.gradient / (self.epsilon + np.sqrt(self.hist_grad))
+            self.hist_grad += gradient ** 2
+        rate_change = gradient / (self.epsilon + np.sqrt(self.hist_grad))
         update = self.lr * rate_change
         for d in self.dendrites:
             d.weight = d.weight - update
-            d.neuron.error += np.mean((d.weight * self.gradient))
+            d.neuron.error += np.mean((d.weight * gradient))
 
 
 class RMSProp(Optimizer):
@@ -75,15 +74,15 @@ class RMSProp(Optimizer):
         self.dendrites = dendrites
         self.neuron = neuron
 
-        self.gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
+        gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
 
-        self.hist_grad = self.hist_grad * self.rho + (1. - self.rho) * self.gradient ** 2
-        rate_change = self.gradient / (self.epsilon + np.sqrt(self.hist_grad))
+        self.hist_grad = self.hist_grad * self.rho + (1. - self.rho) * gradient ** 2
+        rate_change = gradient / (self.epsilon + np.sqrt(self.hist_grad))
         update = self.lr * rate_change
 
         for d in self.dendrites:
             d.weight = d.weight - update
-            d.neuron.error += np.mean((d.weight * self.gradient))
+            d.neuron.error += np.mean((d.weight * gradient))
     # TODO - Check if possible
 
 
@@ -94,8 +93,8 @@ class Adam(Optimizer):
         self.beta_1 = beta_1
         self.beta_2 = beta_2
         self.epsilon = epsilon
-        self.ms = None
-        self.vs = None
+        self.ms = 0
+        self.vs = 0
         self.t = 0
 
     def optimize(self, dendrites, neuron):
@@ -103,24 +102,25 @@ class Adam(Optimizer):
         self.neuron = neuron
 
         self.t += 1
-        if self.ms is None:
-            self.ms = np.zeros(np.shape(self.dendrites[0].neuron.output))
-            self.vs = np.zeros(np.shape(self.dendrites[0].neuron.output))
+        # if self.ms is None:
+        #     self.ms = np.zeros(np.shape(self.dendrites[0].neuron.output))
+        #     print(np.shape(self.ms))
+        #     self.vs = np.zeros(np.shape(self.dendrites[0].neuron.output))
 
-        self.gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
-        lr_t = self.lr * (np.sqrt(1. - np.power(self.beta_2, self.t)) /
-                     (1. - np.power(self.beta_1, self.t)))
+        gradient = self.neuron.error * self.neuron.d_activation(self.neuron.output)
+        # lr_t = self.lr * (np.sqrt(1. - np.power(self.beta_2, self.t)) /
+        #              (1. - np.power(self.beta_1, self.t)))
 
-        self.ms = self.beta_1 * self.ms + (1 - self.beta_1) * self.gradient
-        self.vs = self.beta_2 * self.vs + (1 - self.beta_2) * np.square(self.gradient)
+        self.ms = self.beta_1 * self.ms + (1 - self.beta_1) * gradient
+        self.vs = self.beta_2 * self.vs + (1 - self.beta_2) * np.square(gradient)
 
-        # m_hat = self.ms / (1 - np.power(self.beta_1, self.t))
-        # v_hat = self.vs / (1 - np.power(self.beta_2, self.t))
+        m_hat = self.ms / (1 - np.power(self.beta_1, self.t))
+        v_hat = self.vs / (1 - np.power(self.beta_2, self.t))
 
-        update = lr_t * self.ms / (np.sqrt(self.vs) + self.epsilon)
+        update = self.lr * m_hat / (np.sqrt(v_hat) + self.epsilon)
 
         for d in self.dendrites:
             d.weight = d.weight - update
-            d.neuron.error += np.mean((d.weight * self.gradient))
+            d.neuron.error += np.mean((d.weight * gradient))
 
-        # TODO - Check if possible
+        # TODO - BUG loss increases instead of decreasing

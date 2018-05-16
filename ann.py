@@ -21,7 +21,7 @@ X_oneHotEncoder = OneHotEncoder(categorical_features=[1])
 X = X_oneHotEncoder.fit_transform(X).toarray()
 X = X[:, 1:]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
 # Feature Scaling
 sc = StandardScaler()
@@ -29,9 +29,12 @@ sc.fit(X_train)
 X_train = sc.transform(X_train)
 X_test = sc.transform(X_test)
 
-classifier = Classifier(loss=lse, epochs=50, batch_size=32, optimizer=Optimizers.sdg())
-classifier.add_layer(Layer(neurons_num=6, activation='relu', input_dim=11))
-classifier.add_layer(Layer(neurons_num=6, activation='relu'))
-classifier.add_layer(Layer(neurons_num=1, activation='sigmoid'))
+optimizer = Optimizers.RMSProp()
+
+classifier = Classifier(loss=lse, epochs=20, batch_size=32, history=True)
+classifier.add_layer(Layer(neurons_num=6, activation='relu', input_dim=11, optimizer=optimizer))
+classifier.add_layer(Layer(neurons_num=6, activation='relu', optimizer=optimizer))
+classifier.add_layer(Layer(neurons_num=1, activation='sigmoid', optimizer=optimizer))
 
 classifier.fit(X_train, X_test, y_train, y_test)
+classifier.plot()

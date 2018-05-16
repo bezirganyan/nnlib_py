@@ -4,7 +4,8 @@ import numpy as np
 
 
 class Neuron:
-    def __init__(self, activation):
+    def __init__(self, activation, optimizer):
+        self.optimizer = optimizer
         self.dendrites = []
         self.axons = []
         self.error = 0.0
@@ -32,6 +33,6 @@ class Neuron:
         self.error = loss(self.output, y)
         # print('We got ', self.output, ' When we need ', y)
 
-    def back_propagate(self, optimizer):
-        optimizer.optimize(self.dendrites, self)
+    def back_propagate(self):
+        self.optimizer.optimize(self.dendrites, self)
         self.error = 0

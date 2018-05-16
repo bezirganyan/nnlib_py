@@ -11,7 +11,7 @@ class Optimizer(object):
 
 
 class SGD(Optimizer):
-    def __init__(self, lr=0.001, momentum=0.5, nesterov=False):
+    def __init__(self, lr=0.001, momentum=0.9, nesterov=False):
         super().__init__()
         self.lr = lr
         self.momentum = momentum

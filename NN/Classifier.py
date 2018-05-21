@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import pylab
 
 
 class Classifier:
@@ -96,6 +97,9 @@ class Classifier:
             self.feed_forward(batch)
             self.get_predictions(vals)
             self.back_propagate()
+            assert len(self.X_train) == len(self.y_train)
+            p = np.random.permutation(len(self.X_train))
+            self.X_train, self.y_train = self.X_train[p], self.y_train[p]
 
     def test(self):
         for n in range(0, len(self.X_test), self.batch_size):
@@ -152,7 +156,7 @@ class Classifier:
         self.val_outputs = np.array([])
         return acc, loss, val_acc, val_loss
 
-    def plot(self):
+    def plot(self, show=True, save=False, name=None, path=''):
         if not self.history:
             raise ValueError('The history must be true to plot graphs')
         # summarize history for accuracy
@@ -162,12 +166,34 @@ class Classifier:
         plt.ylabel('accuracy')
         plt.xlabel('epoch')
         plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
         # summarize history for loss
+        if save:
+            if not os.path.exists(path):
+                os.makedirs(path)
+            F = pylab.gcf()
+            DPI = F.get_dpi()
+            print("DPI:", DPI)
+            DefaultSize = F.get_size_inches()
+            print("Default size in Inches", DefaultSize)
+            print("Which should result in a %i x %i Image" % (DPI * DefaultSize[0], DPI * DefaultSize[1]))
+            F.savefig(path+'/'+name+"_acc.png")
+        if show:
+            plt.show()
+
+        plt.gcf().clear()
         plt.plot(self.history['loss'])
         plt.plot(self.history['val_loss'])
         plt.title('model loss')
         plt.ylabel('loss')
         plt.xlabel('epoch')
         plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
+        if save:
+            F = pylab.gcf()
+            DPI = F.get_dpi()
+            print("DPI:", DPI)
+            DefaultSize = F.get_size_inches()
+            print("Default size in Inches", DefaultSize)
+            print("Which should result in a %i x %i Image" % (DPI * DefaultSize[0], DPI * DefaultSize[1]))
+            F.savefig(path+'/'+name+"_loss.png")
+        if show:
+            plt.show()

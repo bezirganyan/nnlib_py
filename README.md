@@ -8,6 +8,7 @@ The aim of the project is to study some of the first order optimization algorith
 
 ## Dependencies
 To run the code you need to have the follwing python packages installed:
+* Python 3
 * Numpy
 * MatPlotlib
 * Scikit-learn

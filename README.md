@@ -1,5 +1,5 @@
 # NNlibPy
-A small Neural Network algorithm for testing different gradient descent optimization algorithms.
+A small Neural Network library for testing different gradient descent optimization algorithms.
 
 ## Project
 This library is written for studying different first order gradient descent algorithms for CS 213 Optimization course.
